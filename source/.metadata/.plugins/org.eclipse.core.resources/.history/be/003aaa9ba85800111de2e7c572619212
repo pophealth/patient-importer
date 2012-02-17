@@ -1,0 +1,17 @@
+package org.mitre.pophealth.client;
+
+import java.io.File;
+import java.util.List;
+
+public class PatientImporter {
+
+	
+	public static List<File> loadPatientDirectory() {
+		
+	}
+	
+	public static void importPatients(List<File> patientFiles) {
+		
+	}
+	
+}

@@ -1,0 +1,141 @@
+package org.mitre.pophealth.client;
+
+import java.io.File;
+import java.util.Collection;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.AuthCache;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.entity.FileEntity;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.BasicAuthCache;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.log4j.Logger;
+
+public class PatientImporter {
+
+    private static final Logger logger = Logger.getLogger(PatientImporter.class);
+
+    private String host;
+    private int port;
+    private String username;
+    private String password;
+    private File directory;
+    
+    private int totalPatients = 0;
+    private int patientsLoaded = 0;
+    private int errors = 0;
+    private boolean successful = true;
+    private boolean started = false;
+    private String currentFileName = "";
+    
+	private DefaultHttpClient httpclient = new DefaultHttpClient();
+	private BasicHttpContext localcontext = new BasicHttpContext();
+	private HttpHost targetHost;
+	private Collection<File> patientFiles;
+
+	public PatientImporter(String host, int port, String username, String password, File directory) {
+		super();
+		this.host = host;
+		this.port = port;
+		this.username = username;
+		this.password = password;
+		this.directory = directory;
+		initalize();
+	}
+
+	private Collection<File> loadPatientDirectory() {
+		String[] extensions = {"xml"};
+		return FileUtils.listFiles(directory, extensions, true);
+	}
+	
+	private void initalize() {
+		targetHost = new HttpHost(host, port, "http"); 
+		AuthScope authScope = new AuthScope(targetHost.getHostName(), targetHost.getPort());
+		httpclient.getCredentialsProvider().setCredentials(authScope, new UsernamePasswordCredentials(username,password));
+		AuthCache authCache = new BasicAuthCache();
+		BasicScheme basicAuth = new BasicScheme();
+		authCache.put(targetHost, basicAuth);
+		localcontext.setAttribute(ClientContext.AUTH_CACHE, authCache);        
+		patientFiles = loadPatientDirectory();
+		totalPatients = patientFiles.size();
+
+	}
+	
+	public void startPatientImport() {
+		
+		started = true;
+		
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				for (File patientFile : patientFiles) {
+					currentFileName = patientFile.getName();
+					
+					try {
+						HttpPost httppost = new HttpPost("/records");
+						FileEntity entity = new FileEntity(patientFile, "text/xml; charset=\"UTF-8\"");
+						httppost.setEntity(entity);
+
+						System.out.println("executing request " + httppost.getRequestLine());
+						HttpResponse response = httpclient.execute(targetHost, httppost, localcontext);		
+						HttpEntity responseEntity = response.getEntity();
+						String result = IOUtils.toString(responseEntity.getContent());
+						
+						boolean patientSuccessful = result.equals("patient imported");
+						successful = successful && patientSuccessful;
+						
+						if (!patientSuccessful) {
+							logger.error("patient import failed: " + patientFile.getAbsolutePath() + " : " + result);
+							errors++;
+						} else {
+							logger.info("patient: " + patientFile.getAbsolutePath() + " imported successfully");
+						}
+						
+					} catch (Exception e) {
+						errors++;
+						successful = false;
+						logger.error("Error loading patient", e);
+					} finally {
+						patientsLoaded++;
+					}
+					
+				}
+			}
+		}).start();
+	}
+	
+	public boolean isComplete() {
+		return patientsLoaded == totalPatients;
+	}
+
+	public boolean isSuccessful() {
+		return successful && errors == 0;
+	}
+	
+	public int getTotalPatients() {
+		return totalPatients;
+	}
+	public int getPatientsLoaded() {
+		return patientsLoaded;
+	}
+	public boolean isStarted() {
+		return started;
+	}
+
+	public String getCurrentFile() {
+		return currentFileName;
+	}
+	public int getErrorCount() {
+		return errors;
+	}
+
+}

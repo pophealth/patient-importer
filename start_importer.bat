@@ -1,0 +1,1 @@
+java -cp patient_importer.jar;.\source\lib\commons-codec-1.4.jar;.\source\lib\commons-io-2.1.jar;.\source\lib\commons-logging-1.1.1.jar;.\source\lib\httpclient-4.1.3.jar;.\source\lib\httpclient-cache-4.1.3.jar;.\source\lib\httpcore-4.1.4.jar;.\source\lib\httpmime-4.1.3.jar;.\source\lib\log4j-1.2.16.jar;.\source\lib\swing-layout-1.0.1.jar org.mitre.pophealth.client.Main

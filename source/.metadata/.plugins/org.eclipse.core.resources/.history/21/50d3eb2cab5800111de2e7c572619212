@@ -1,0 +1,61 @@
+package org.mitre.pophealth.client;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Iterator;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.AuthCache;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.BasicAuthCache;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.protocol.BasicHttpContext;
+
+public class PatientImporter {
+
+	
+	public static Iterator<File> loadPatientDirectory(File directory) {
+		String[] extensions = {"xml"};
+		return FileUtils.iterateFiles(directory, extensions, true);
+	}
+	
+	public static void importPatients(Iterator<File> patientFiles) throws ClientProtocolException, IOException {
+		
+		File patientFile = patientFiles.next();
+		
+		FileUtils.readFileToString(patientFile);
+		
+		
+		HttpHost targetHost = new HttpHost("localhost", 3000, "http"); 
+
+		DefaultHttpClient httpclient = new DefaultHttpClient();
+
+		httpclient.getCredentialsProvider().setCredentials(
+		        new AuthScope(targetHost.getHostName(), targetHost.getPort()), 
+		        new UsernamePasswordCredentials("pophealth", "pophealth"));
+
+		// Create AuthCache instance
+		AuthCache authCache = new BasicAuthCache();
+		// Generate BASIC scheme object and add it to the local auth cache
+		BasicScheme basicAuth = new BasicScheme();
+		authCache.put(targetHost, basicAuth);
+
+		// Add AuthCache to the execution context
+		BasicHttpContext localcontext = new BasicHttpContext();
+		localcontext.setAttribute(ClientContext.AUTH_CACHE, authCache);        
+
+		HttpPost httppost = new HttpPost("/records");
+
+		System.out.println("executing request " + httppost.getRequestLine());
+		HttpResponse response = httpclient.execute(targetHost, httppost, localcontext);		
+
+	}
+	
+}

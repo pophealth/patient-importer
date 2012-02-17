@@ -1,0 +1,21 @@
+package org.mitre.pophealth.client;
+
+import java.io.File;
+import java.util.Iterator;
+
+import org.apache.log4j.xml.DOMConfigurator;
+
+public class Main {
+
+	public static void main(String[] args) throws Exception {
+		
+        DOMConfigurator.configure(Main.class.getClassLoader().getResource("log4j.xml"));
+
+		//Iterator<File> patientFiles = PatientImporter.loadPatientDirectory(new File("/Users/aquina/data/data/patients225/"));
+		//PatientImporter.importPatients(patientFiles);
+		
+		ImporterFrame frame = new ImporterFrameLogic();
+		frame.setVisible(true);
+	}
+	
+}

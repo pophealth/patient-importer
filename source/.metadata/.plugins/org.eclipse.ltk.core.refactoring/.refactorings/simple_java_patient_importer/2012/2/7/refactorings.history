@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;simple_java_patient_importer/src/log4j.properties&apos; to &apos;log4j.xml&apos;" description="Rename resource &apos;log4j.properties&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="src/log4j.properties" name="log4j.xml" stamp="1329403602581" updateReferences="true"/>
+</session>
