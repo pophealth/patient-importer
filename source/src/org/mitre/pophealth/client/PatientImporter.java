@@ -83,7 +83,8 @@ public class PatientImporter {
 					
 					try {
 						HttpPost httppost = new HttpPost("/records");
-						FileEntity entity = new FileEntity(patientFile, "text/xml; charset=\"UTF-8\"");
+						// this cannot be text xml... rails tries to process the xml if it is marked text/xml which we do not want.
+						FileEntity entity = new FileEntity(patientFile, "text/plain; charset=\"UTF-8\"");
 						httppost.setEntity(entity);
 
 						System.out.println("executing request " + httppost.getRequestLine());
